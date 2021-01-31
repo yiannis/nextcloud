@@ -1,0 +1,6 @@
+- name: Get debug info
+  hosts: ubuntu
+  tasks:
+  - debug: var=ansible_hostname
+  - debug: var=inventory_hostname
+  - debug: var=ansible_fqdn

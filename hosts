@@ -1,0 +1,5 @@
+[control]
+isapink ansible_connection=local
+
+[ubuntu]
+isapink ansible_connection=local

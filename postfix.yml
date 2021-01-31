@@ -1,0 +1,56 @@
+- name: |
+        Setup Postfix for sending email
+        'See: https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-as-a-send-only-smtp-server-on-ubuntu-20-04'
+  hosts: ubuntu
+  tasks:
+  - name: Install Ubuntu packages
+    apt:
+      pkg:
+      - mailutils
+      - debconf
+      - debconf-utils
+  - name: Set up debian postfix package - mailer type
+    debconf:
+      name: postfix
+      question: postfix/main_mailer_type
+      value: Internet Site
+      vtype: select
+  - name: Set up debian postfix package - mail name
+    debconf:
+      name: postfix
+      question: postfix/mailname
+      value: "{{ ansible_fqdn }}"
+      vtype: string
+  - name: Edit the postfix conf file - local traffic only
+    lineinfile: 
+      path: /etc/postfix/main.cf
+      line: inet_interfaces = loopback-only
+      regexp: ^inet_interfaces
+  - name: Edit the postfix conf file - domains delivered
+    lineinfile: 
+      path: /etc/postfix/main.cf
+      line: 'mydestination = localhost.$mydomain, localhost, $myhostname'
+      regexp: ^mydestination
+  - name: Edit the postfix conf file - TLS Cert
+    lineinfile: 
+      path: /etc/postfix/main.cf
+      line: smtpd_tls_cert_file=/etc/letsencrypt/live/{{ ansible_fqdn }}/fullchain.pem
+      regexp: ^smtpd_tls_cert_file
+  - name: Edit the postfix conf file - TLS key
+    lineinfile: 
+      path: /etc/postfix/main.cf
+      line: smtpd_tls_key_file=/etc/letsencrypt/live/{{ ansible_fqdn }}/privkey.pem
+      regexp: ^smtpd_tls_key_file
+  - name: Restart postfix
+    service:
+      name: postfix
+      state: restarted
+  - name: Forward system mail to gmail
+    lineinfile: 
+      path: /etc/aliases
+      line: 'root: yiannisbe@gmail.com'
+      regexp: ^root
+    register: aliases_conf
+  - name: Generate email aliases
+    command: newaliases
+    when: aliases_conf.changed

@@ -1,0 +1,28 @@
+- name: |
+        Digital Ocean Ubuntu 20.04 Setup.
+        'See: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-20-04'
+  hosts: ubuntu
+  tasks:
+  - name: Create a new user
+    user:
+      name: yiannis
+      password: $6$fyJpLKzk2WODNif$xRcW0sY2VV1fhx4SqFHSskzKWlj3Ns4BMCDvII.1TNMdSZ3RAfPcBgqYySdS9BCZh4H97RbUDxj/lv8oO9soZ1
+      append: yes
+      groups: sudo
+  - name: Copy SSH key to new user
+    copy:
+      src: /root/.ssh
+      dest: /home/yiannis/
+      owner: yiannis
+      group: yiannis
+      mode: preserve
+      remote_src: yes
+  - name: Firewall - Enable and allow OpenSSH
+    ufw:
+      state: enabled
+      rule: allow
+      name: OpenSSH
+  - name: Firewall - also allow https
+    ufw:
+      rule: allow
+      name: Apache Secure
